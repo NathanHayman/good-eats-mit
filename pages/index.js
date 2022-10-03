@@ -1,50 +1,93 @@
-import Head from 'next/head'
-import Container from '../components/container'
-import MoreStories from '../components/more-stories'
-import HeroPost from '../components/hero-post'
-import Intro from '../components/intro'
-import Layout from '../components/layout'
-import { CMS_NAME } from '../lib/constants'
-import { indexQuery } from '../lib/queries'
-import { usePreviewSubscription } from '../lib/sanity'
-import { getClient, overlayDrafts } from '../lib/sanity.server'
+import React from 'react'
+import { useSession, signIn, signOut, getSession } from 'next-auth/react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 
-export default function Index({ allPosts: initialAllPosts, preview }) {
-  const { data: allPosts } = usePreviewSubscription(indexQuery, {
-    initialData: initialAllPosts,
-    enabled: preview,
-  })
-  const [heroPost, ...morePosts] = allPosts || []
-  return (
-    <>
-      <Layout preview={preview}>
-        <Head>
-          <title>Next.js Blog Example with {CMS_NAME}</title>
-        </Head>
-        <Container>
-          <Intro />
-          {heroPost && (
-            <HeroPost
-              title={heroPost.title}
-              coverImage={heroPost.coverImage}
-              date={heroPost.date}
-              author={heroPost.author}
-              slug={heroPost.slug}
-              excerpt={heroPost.excerpt}
-            />
-          )}
-          {morePosts.length > 0 && <MoreStories posts={morePosts} />}
-        </Container>
-      </Layout>
-    </>
-  )
+
+export default function Login() {
+    const { data: session, status } = useSession()
+
+    // When rendering client side don't display anything until loading is complete
+    // once logged in, redirect to the restaurants page
+    if (status === 'loading') return null
+
+    if (session) {
+        return (
+            <>
+                <h1>Logged in as {session.user.email}</h1>
+                <button onClick={() => signOut()}>Sign out</button>
+                <Link href="/restaurants">
+                    <a>Restaurants</a>
+                </Link>
+            </>
+        )
+    }
+
+    return (
+        <>
+            <h1>Not signed in</h1>
+            <button onClick={() => signIn()}>Sign in</button>
+        </>
+    )
 }
 
-export async function getStaticProps({ preview = false }) {
-  const allPosts = overlayDrafts(await getClient(preview).fetch(indexQuery))
+
+
+export async function getServerSideProps(context) {
+    if (context.req.headers.cookie) {
+        const session = await getSession(context)
+        if (session) {
+            return {
+                redirect: {
+                    destination: '/restaurants',
+                    permanent: false,
+                },
+            }
+        }
+    }
+    
+    return {
+        props: {
+            session: await getSession(context)
+        }
+    }
+}
+
+
+
+
+
+
+
+
+/*
+import React from 'react';
+import { sanityClient } from '../lib/sanity.server';
+import { Product } from '../components';
+
+const Home = ({ products }) => (
+  <div>
+    <div className="products-heading">
+      <h2>Best Seller Products</h2>
+      <p>speaker There are many variations passages</p>
+    </div>
+
+    <div className="products-container">
+      {products?.map((product) => <Product key={product._id} product={product} />)}
+    </div>
+
+  </div>
+);
+
+export const getServerSideProps = async () => {
+  const query = '*[_type == "product"]';
+  const products = await sanityClient.fetch(query);
+
+
   return {
-    props: { allPosts, preview },
-    // If webhooks isn't setup then attempt to re-generate in 1 minute intervals
-    revalidate: process.env.SANITY_REVALIDATE_SECRET ? undefined : 60,
+    props: { products }
   }
 }
+
+export default Home;
+*/

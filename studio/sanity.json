@@ -1,5 +1,9 @@
 {
   "root": true,
+  "api": {
+    "projectId": "1orn00q1",
+    "dataset": "production"
+  },
   "project": {
     "name": "Blog"
   },
@@ -9,11 +13,22 @@
     "@sanity/default-login",
     "@sanity/desk-tool",
     "asset-source-unsplash",
-    "@sanity/production-preview"
+    "@sanity/production-preview",
+    "@sanity/dashboard",
+    "@sanity/components",
+    "@sanity/google-maps-input",
+    "dashboard-widget-document-list",
+    "vercel-deploy",
+    "note-field",
+    "media",
+    "social-preview",
+    "seo-pane"
   ],
   "env": {
     "development": {
-      "plugins": ["@sanity/vision"]
+      "plugins": [
+        "@sanity/vision"
+      ]
     }
   },
   "parts": [
@@ -24,6 +39,22 @@
     {
       "implements": "part:@sanity/production-preview/resolve-production-url",
       "path": "./resolveProductionUrl.js"
+    },
+    {
+      "implements": "part:@sanity/desk-tool/structure",
+      "path": "./skin/deskStructure.js"
+    },
+    {
+      "implements": "part:@sanity/base/document-actions/resolver",
+      "path": "./skin/resolve-actions.js"
+    },
+    {
+      "implements": "part:@sanity/base/new-document-structure",
+      "path": "./skin/docStructure.js"
+    },
+    {
+      "implements": "part:@sanity/form-builder/input-resolver",
+      "path": "./skin/resolve-input.js"
     }
   ]
 }
